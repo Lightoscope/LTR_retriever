@@ -250,15 +250,17 @@ sub Identifier() {
 
 	# estimate evolutionary distance
 	my $tot_len = $n_transition + $n_transversion + $nident; #SNP only, indel not counted
-	my $raw_d = ($n_transition+$n_transversion) / $tot_len; #percent SNP
+	my $raw_d = 0; #percent SNP #ryandisney: redefined $raw_d to avoid edge cases that cause a division-by-zero error 
+	$raw_d = ($n_transition + $n_transversion) / $tot_len if $tot_len > 0; #ryandisney: redefined $raw_d to avoid edge cases that cause a division-by-zero error 
 	my $JC69_d = 1; #the Jukes-Cantor model K= -3/4*ln(1-4*d/3) adjusts for non-coding sequences, d=$raw_d
 	if ($raw_d < 0.66){ #highly diverged sequence could not be adjusted by the JC69 model
 		$JC69_d = -3/4*log(1-4*$raw_d/3); #log=ln
 		} else {
 		$JC69_d = $raw_d;
 		}
-	my $P = $n_transition / $tot_len; #fraction of transition
-	my $Q = $n_transversion / $tot_len; #fraction of transversion
+	my ($P, $Q) = (0, 0); #ryandisney: defined $P and $Q to avoid possible division-by-zero error 
+	$P = $n_transition / $tot_len if $tot_len > 0; #fraction of transition
+	$Q = $n_transversion / $tot_len if $tot_len > 0; #fraction of transversion
 	my $K2P_d = -1/2*log((1-2*$P-$Q)*sqrt(1-2*$Q)); #The Kimura 2-parameter model controls difference b/t transition and transversion rates
         
 	#estimate divergence time T = K/2u, where K stands for divergence rate, and u is mutation rate (per bp per ya)
